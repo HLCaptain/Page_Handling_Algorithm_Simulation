@@ -2,8 +2,8 @@ import java.util.Scanner;
 import java.util.Vector;
 
 public class PageHandlingSimulator {
-	private LRU lru;
-
+	private final LRU lru;
+	private int pageFault;
 
 	public PageHandlingSimulator() {
 		lru = new LRU(3);
@@ -18,13 +18,14 @@ public class PageHandlingSimulator {
 		page.setData(0);
 		pages.add(page);
 		lru.setPages(pages);
+		this.pageFault = 0;
 	}
 
 	/**
 	 * Reads in the inputs, returns a string.
 	 * @return references of numbers.
 	 */
-	Vector<Integer> getInput() {
+	public Vector<Integer> getInput() {
 		String line = new Scanner(System.in).nextLine();
 		Vector<Integer> pageReferences = new Vector<>();
 		for (String str : line.split(",")) {
@@ -37,10 +38,23 @@ public class PageHandlingSimulator {
 	 * Reads in the page reference inputs, then outputs the simulated actions
 	 * of the page handling algorithms based on LRU, with max 3 steps of page locks.
 	 */
-	void start() {
-		// Reading in the inputs
+	public void start() {
+		// Reading the inputs
 		Vector<Integer> pageReferences = new Vector<>(getInput());
 
+		computeInputs(pageReferences);
+	}
 
+	public void computeInputs(Vector<Integer> inputs) {
+		StringBuilder output = new StringBuilder();
+		for (Integer input : inputs) {
+			String nextStep = lru.pageCall(input);
+			// If not able to read in data, it failed.
+			if (!nextStep.equals("-")) {
+				pageFault++;
+			}
+			output.append(nextStep);
+		}
+		System.out.println(output);
 	}
 }
