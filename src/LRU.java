@@ -52,12 +52,14 @@ public class LRU {
 	public String pageCall(int input) {
 		// Find page containing the data.
 		for (Page page : pages) {
-			if (pageLocks.get(page) == 0 && page.getData() == input) {
+			if (page.getData() == Math.abs(input)) {
 				useAndUpdate(page);
 				// If input is negative, then we write the page and it becomes dirty.
 				if (input < 0) {
 					page.setDirty(true);
 				}
+				// Page is referenced, not locked anymore.
+				pageLocks.replace(page, 0);
 				return "-";
 			}
 		}
@@ -83,6 +85,7 @@ public class LRU {
 		}
 
 		// All pages are locked.
+		useAndUpdate(null);
 		return "*";
 	}
 
@@ -94,6 +97,9 @@ public class LRU {
 	public void useAndUpdate(Page page) {
 		for (Page p : pages) {
 			lastUsed.replace(p, (lastUsed.get(p) + 1));
+			if (pageLocks.get(p) > 0) {
+				pageLocks.replace(p, pageLocks.get(p) - 1);
+			}
 		}
 		if (page != null) {
 			lastUsed.replace(page, 0);
